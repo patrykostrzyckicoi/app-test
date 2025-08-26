@@ -9,7 +9,7 @@ spipeline {
         CONTAINER_REGISTRY = "ghcr.io"
         IMAGE_NAME = "ghcr.io/patrykostrzyckicoi/terraform"
         IMAGE_TAG = "latest"
-        REGISTRY_CREDENTIALS = 'access-token-jenkins-patryk-ostrzycki'
+        REGISTRY_CREDENTIALS = "access-token-jenkins-patryk-ostrzycki"
     }
 
     stages {
@@ -39,6 +39,7 @@ spipeline {
         }
     }
 }
+
 
 
 
