@@ -3,7 +3,7 @@ pipeline {
         docker {
             image 'ghcr.io/patrykostrzyckicoi/terraform:latest'
             registryUrl 'https://ghcr.io'
-            registryCredentialsId 'github-access-patryk-ostrzycki'
+            registryCredentialsId 'access-token-jenkins-patryk-ostrzycki'
             args '-u root:root'
         }
     }
@@ -15,3 +15,4 @@ pipeline {
         }
     }
 }
+
