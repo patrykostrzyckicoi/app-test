@@ -5,7 +5,7 @@ pipeline {
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '5'))
     timeout(time: 10, unit: 'MINUTES')
-    skipDefaultCheckout(true)                    // <— ważne: wyłącz auto-checkout
+    skipDefaultCheckout(true)
   }
 
   environment {
@@ -14,20 +14,20 @@ pipeline {
     GITHUB_CREDENTIALS_ID = 'access-token-jenkins-patryk-ostrzycki'
 
     // --- Ścieżki w repo app-test ---
-    BASE_DIR        = '.'                        // Dockerfile jest w root
+    BASE_DIR        = '.'
     APP_DIR         = 'app'
     DOCKERFILE_PATH = 'Dockerfile'
 
     // --- Registry: GHCR ---
-    REGISTRY_HOST        = 'ghcr.io'             // do docker login/logout
+    REGISTRY_HOST        = 'ghcr.io'
     IMAGE_REPO           = 'ghcr.io/patrykostrzyckicoi/app-test'
-    REGISTRY_CREDENTIALS = 'access-token-jenkins-patryk-ostrzycki'  // GitHub username + PAT(write:packages)
+    REGISTRY_CREDENTIALS = 'access-token-jenkins-patryk-ostrzycki'
   }
 
   stages {
     stage('Checkout') {
       steps {
-        git url: env.REPO_URL, branch: 'master',  // app-test używa master
+        git url: env.REPO_URL, branch: 'master',
             changelog: true, poll: true,
             credentialsId: env.GITHUB_CREDENTIALS_ID
         sh 'git --version'
@@ -38,7 +38,7 @@ pipeline {
       agent {
         docker {
           image 'python:3.11-slim'
-          args  '-u 0:0'                          // lub zrób venv, jeśli wolisz bez roota
+          args  '-u 0:0'
         }
       }
       steps {
@@ -56,12 +56,12 @@ pipeline {
     }
 
     stage('Build Docker image') {
-      environment { GIT_SHA = '' }
       steps {
         script {
-          env.GIT_SHA      = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
-          env.IMAGE_TAG    = "${IMAGE_REPO}:${GIT_SHA}"
-          env.IMAGE_LATEST = "${IMAGE_REPO}:latest"
+          env.GIT_SHA       = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+          env.IMAGE_TAG     = "${env.IMAGE_REPO}:${env.GIT_SHA}"
+          env.IMAGE_LATEST  = "${env.IMAGE_REPO}:latest"
+          echo "Building ${env.IMAGE_TAG} (and tagging as latest)"
         }
         sh '''
           set -eux
@@ -114,7 +114,7 @@ pipeline {
 
   post {
     always {
-      cleanWs()  // jeśli brak pluginu, użyj deleteDir()
+      cleanWs()
     }
   }
 }
