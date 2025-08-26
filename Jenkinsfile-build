@@ -1,0 +1,49 @@
+pipeline {
+    agent {
+        label 'slave01'
+    }
+
+    environment {
+        REPO_DOCKERFILE = "https://github.com/patrykostrzyckicoi/app-test.git"
+        DOCKERFILE_PATH = "Dockerfile"
+        CONTAINER_REGISTRY = "ghcr.io"
+        IMAGE_NAME = "ghcr.io/patrykostrzyckicoi/terraform"
+        IMAGE_TAG = "latest"
+        REGISTRY_CREDENTIALS = "access-token-jenkins-patryk-ostrzycki"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+              git url: env.REPO_DOCKERFILE, branch: "master", changelog: true, credentialsId: env.REGISTRY_CREDENTIALS, poll: true
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -f ${DOCKERFILE_PATH} -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+            }
+        }
+        stage('Push to GitHub Container Registry') {
+            steps {
+                script {
+                    // Login do GHCR
+                    withCredentials([usernamePassword(credentialsId: env.REGISTRY_CREDENTIALS, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            echo $GITHUB_TOKEN | docker login ${CONTAINER_REGISTRY} -u $GITHUB_USER --password-stdin
+                            docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                            docker logout ghcr.io
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
