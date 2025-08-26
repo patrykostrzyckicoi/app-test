@@ -9,7 +9,7 @@ pipeline {
         CONTAINER_REGISTRY = "ghcr.io"
         IMAGE_NAME = "ghcr.io/patrykostrzyckicoi/terraform"
         IMAGE_TAG = "latest"
-        REGISTRY_CREDENTIALS = 'github-access-patryk-ostrzycki'
+        REGISTRY_CREDENTIALS = 'github-access-patrykostrzyckicoi'
     }
 
     stages {
@@ -39,6 +39,7 @@ pipeline {
         }
     }
 }
+
 
 
 
