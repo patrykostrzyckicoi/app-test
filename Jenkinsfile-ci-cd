@@ -29,17 +29,17 @@ pipeline {
     }
 
     stage('Test (pytest)') {
+      agent {
+        docker { image 'python:3.11-slim' }   // albo python:3.11-alpine
+      }
       steps {
         dir(env.APP_DIR) {
           sh '''
             set -eux
-            python3 -V
-            pip3 -V || true
-            python3 -m pip install --upgrade pip
-            python3 -m pip install -r requirements.txt
-            # uruchom tests i wypisz junit do reports/
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
             mkdir -p reports
-            python3 -m pytest -q --junitxml=reports/junit.xml
+            pytest -q --junitxml=reports/junit.xml
           '''
           junit 'reports/junit.xml'
         }
@@ -114,3 +114,4 @@ pipeline {
     }
   }
 }
+
