@@ -30,7 +30,10 @@ pipeline {
 
     stage('Test (pytest)') {
       agent {
-        docker { image 'python:3.11-slim' }   // albo python:3.11-alpine
+        docker {
+          image 'python:3.11-slim'
+          args '-u 0:0'
+        }
       }
       steps {
         dir(env.APP_DIR) {
@@ -114,4 +117,5 @@ pipeline {
     }
   }
 }
+
 
