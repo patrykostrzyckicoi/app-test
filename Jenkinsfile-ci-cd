@@ -5,23 +5,29 @@ pipeline {
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '5'))
     timeout(time: 10, unit: 'MINUTES')
+    skipDefaultCheckout(true)                    // <— ważne: wyłącz auto-checkout
   }
 
   environment {
-    REPO_URL              = 'https://github.com/devopsit-mg/jenkins-training.git'
+    // --- Repo z aplikacją ---
+    REPO_URL              = 'https://github.com/patrykostrzyckicoi/app-test.git'
     GITHUB_CREDENTIALS_ID = 'access-token-jenkins-patryk-ostrzycki'
-    BASE_DIR              = 'app-test'
-    APP_DIR               = "${BASE_DIR}/app"
-    DOCKERFILE_PATH       = "${BASE_DIR}/Dockerfile"
-    REGISTRY_URL         = 'https://index.docker.io/v1/'
+
+    // --- Ścieżki w repo app-test ---
+    BASE_DIR        = '.'                        // Dockerfile jest w root
+    APP_DIR         = 'app'
+    DOCKERFILE_PATH = 'Dockerfile'
+
+    // --- Registry: GHCR ---
+    REGISTRY_HOST        = 'ghcr.io'             // do docker login/logout
     IMAGE_REPO           = 'ghcr.io/patrykostrzyckicoi/app-test'
-    REGISTRY_CREDENTIALS = 'access-token-jenkins-patryk-ostrzycki'
+    REGISTRY_CREDENTIALS = 'access-token-jenkins-patryk-ostrzycki'  // GitHub username + PAT(write:packages)
   }
 
   stages {
     stage('Checkout') {
       steps {
-        git url: env.REPO_URL, branch: 'main',
+        git url: env.REPO_URL, branch: 'master',  // app-test używa master
             changelog: true, poll: true,
             credentialsId: env.GITHUB_CREDENTIALS_ID
         sh 'git --version'
@@ -32,7 +38,7 @@ pipeline {
       agent {
         docker {
           image 'python:3.11-slim'
-          args '-u 0:0'
+          args  '-u 0:0'                          // lub zrób venv, jeśli wolisz bez roota
         }
       }
       steps {
@@ -50,14 +56,11 @@ pipeline {
     }
 
     stage('Build Docker image') {
-      environment {
-        GIT_SHA = ''
-      }
+      environment { GIT_SHA = '' }
       steps {
         script {
-          GIT_SHA = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
-          env.GIT_SHA = GIT_SHA
-          env.IMAGE_TAG = "${IMAGE_REPO}:${GIT_SHA}"
+          env.GIT_SHA      = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+          env.IMAGE_TAG    = "${IMAGE_REPO}:${GIT_SHA}"
           env.IMAGE_LATEST = "${IMAGE_REPO}:latest"
         }
         sh '''
@@ -78,10 +81,10 @@ pipeline {
                                           passwordVariable: 'REG_PASS')]) {
           sh '''
             set -eux
-            echo "$REG_PASS" | docker login "${REGISTRY_URL}" -u "$REG_USER" --password-stdin
+            echo "$REG_PASS" | docker login "${REGISTRY_HOST}" -u "$REG_USER" --password-stdin
             docker push "${IMAGE_TAG}"
             docker push "${IMAGE_LATEST}"
-            docker logout "${REGISTRY_URL}"
+            docker logout "${REGISTRY_HOST}"
           '''
         }
       }
@@ -96,12 +99,10 @@ pipeline {
         sh '''
           set -eux
           CID=$(docker run -d -p "${APP_PORT}:5000" "${IMAGE_TAG}")
-          # Daj chwilę na start
           for i in $(seq 1 20); do
             if curl -fsS "http://localhost:${APP_PORT}/health" >/dev/null 2>&1; then break; fi
             sleep 1
           done
-          # Sprawdź dokładną odpowiedź
           RESP=$(curl -fsS "http://localhost:${APP_PORT}/health")
           echo "Health response: $RESP"
           test "$RESP" = '{"status":"ok"}' || test "$RESP" = '{"status": "ok"}'
@@ -113,9 +114,4 @@ pipeline {
 
   post {
     always {
-      cleanWs()
-    }
-  }
-}
-
-
+      cleanWs()  //
