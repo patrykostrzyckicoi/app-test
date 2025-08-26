@@ -20,7 +20,6 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh "ls -l examples/build_image"
                 sh "docker build -f ${DOCKERFILE_PATH} -t ${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
@@ -40,5 +39,6 @@ pipeline {
         }
     }
 }
+
 
 
