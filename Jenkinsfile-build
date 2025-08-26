@@ -15,7 +15,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-              git url: env.REPO_DOCKERFILE, branch: "main", changelog: true, credentialsId: env.REGISTRY_CREDENTIALS, poll: true
+              git url: env.REPO_DOCKERFILE, branch: "master", changelog: true, credentialsId: env.REGISTRY_CREDENTIALS, poll: true
             }
         }
         stage('Build Docker Image') {
@@ -40,3 +40,4 @@ pipeline {
         }
     }
 }
+
