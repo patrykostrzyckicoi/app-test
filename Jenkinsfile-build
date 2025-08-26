@@ -5,7 +5,7 @@ pipeline {
 
     environment {
         REPO_DOCKERFILE = "https://github.com/patrykostrzyckicoi/app-test.git"
-        DOCKERFILE_PATH = "examples/build_image/Dockerfile"
+        DOCKERFILE_PATH = "Dockerfile"
         CONTAINER_REGISTRY = "ghcr.io"
         IMAGE_NAME = "ghcr.io/patrykostrzyckicoi/terraform"
         IMAGE_TAG = "latest"
@@ -40,4 +40,5 @@ pipeline {
         }
     }
 }
+
 
