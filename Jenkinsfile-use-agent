@@ -1,0 +1,17 @@
+pipeline {
+    agent {
+        docker {
+            image 'ghcr.io/patrykostrzyckicoi/terraform:latest'
+            registryUrl 'https://ghcr.io'
+            registryCredentialsId 'github-access-patryk-ostrzycki'
+            args '-u root:root'
+        }
+    }
+    stages {
+        stage('Check cli tools') {
+            steps {
+                sh 'terraform --version'
+            }
+        }
+    }
+}
