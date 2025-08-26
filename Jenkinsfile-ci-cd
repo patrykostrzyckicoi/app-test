@@ -98,14 +98,20 @@ pipeline {
         }
         sh '''
           set -eux
-          CID=$(docker run -d -p "${APP_PORT}:5000" "${IMAGE_TAG}")
-          for i in $(seq 1 20); do
+          CID=$(docker run -d -p "${APP_PORT}:9000" "${IMAGE_TAG}")   # <-- 9000 (port aplikacji)
+          # czekamy aż aplikacja wstanie (max ~30s)
+          for i in $(seq 1 30); do
             if curl -fsS "http://localhost:${APP_PORT}/health" >/dev/null 2>&1; then break; fi
             sleep 1
           done
-          RESP=$(curl -fsS "http://localhost:${APP_PORT}/health")
+          RESP=$(curl -fsS "http://localhost:${APP_PORT}/health" || true)
           echo "Health response: $RESP"
-          test "$RESP" = '{"status":"ok"}' || test "$RESP" = '{"status": "ok"}'
+          if [ "$RESP" != '{"status":"ok"}' ] && [ "$RESP" != '{"status": "ok"}' ]; then
+            echo "Healthcheck failed, dumping container logs:"
+            docker logs "$CID" || true
+            docker rm -f "$CID"
+            exit 56
+          fi
           docker rm -f "$CID"
         '''
       }
