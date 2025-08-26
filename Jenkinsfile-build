@@ -1,4 +1,4 @@
-spipeline {
+pipeline {
     agent {
         label 'slave01'
     }
@@ -39,6 +39,7 @@ spipeline {
         }
     }
 }
+
 
 
 
