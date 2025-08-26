@@ -114,4 +114,7 @@ pipeline {
 
   post {
     always {
-      cleanWs()  //
+      cleanWs()  // jeśli brak pluginu, użyj deleteDir()
+    }
+  }
+}
